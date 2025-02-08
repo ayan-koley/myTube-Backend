@@ -1,0 +1,23 @@
+{
+  "name": "mytube-backend",
+  "version": "1.0.0",
+  "description": "Backend of mytube",
+  "keywords": [
+    "javaScript"
+  ],
+  "homepage": "https://github.com/ayan-koley/myTube-Backend#readme",
+  "bugs": {
+    "url": "https://github.com/ayan-koley/myTube-Backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ayan-koley/myTube-Backend.git"
+  },
+  "license": "ISC",
+  "author": "Ayan",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
