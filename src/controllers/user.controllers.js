@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateAccessandRefreshToken = async(userId) => {
     try {
@@ -211,6 +212,7 @@ const getCurrentUser = asyncHandler(async(req, res) => {
 
 const updateUserAvatar = asyncHandler(async(req, res) => {
   const avatar = req.file?.path;
+  console.log(req.file)
   if(!avatar) {
     throw new ApiError(400, "Avatar is missing ");
   }
@@ -350,6 +352,59 @@ console.log("userDetails is ", userDetails);
   )
 })
 
+const getWatchHistory = asyncHandler(async(req, res) => {
+  const watchHistory = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user?._id)
+      }
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullname: 1,
+                    avatar: 1,
+                    username: 1
+                  }
+                }
+              ]
+            }
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ])
+  console.log(watchHistory);
+  if(!watchHistory) {
+    throw new ApiError(400, "Unauthorized request");
+  }
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, watchHistory[0].watchHistory, "WatchHistory fetched successfully")
+  )
+})
+
 export { 
   registerUser, 
   loginUser, 
@@ -359,5 +414,6 @@ export {
   getCurrentUser,
   updateUserAvatar,
   updateUserCoverImage,
-  getUserChannelProfile
+  getUserChannelProfile,
+  getWatchHistory
 };
