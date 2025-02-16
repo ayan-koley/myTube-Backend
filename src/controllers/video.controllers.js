@@ -4,12 +4,12 @@ import {User} from "../models/user.models.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
-import {uploadOnCloudinary} from "../utils/cloudinary.js"
+import {deleteImageOnCloudinary, deleteVideoOnCloudinary, uploadOnCloudinary} from "../utils/cloudinary.js"
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy = "views", sortType = 1, userId } = req.query
-    //TODO: get all videos based on query, sort, pagination
+    //: get all videos based on query, sort, pagination
     // validation on query
     if(!query.trim()) {
         throw new ApiError(400, "Send a valid query ");
@@ -55,7 +55,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description} = req.body
-    // TODO: get video, upload to cloudinary, create video
+    //  get video, upload to cloudinary, create video
 
     // validation on title and description
     if(!title.trim()) {
@@ -79,15 +79,19 @@ const publishAVideo = asyncHandler(async (req, res) => {
     const videoFile = await uploadOnCloudinary(videoFileLocalPath);
     const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
 
-    console.log("videoFile is ", videoFile.duration);
-
     if(!(videoFile && thumbnail)) {
         throw new ApiError(500, "Internal server error on upload files");
     }
 
     const video = await Video.create({
-        videoFile: videoFile.url,
-        thumbnail: thumbnail.url,
+        videoFile: {
+            url: videoFile.url,
+            public_id: videoFile.public_id
+        },
+        thumbnail: {
+            url: thumbnail.url,
+            public_id: thumbnail.public_id
+        },
         owner: req.user?._id,
         title,
         description,
@@ -109,7 +113,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-    //TODO: get video by id
+    // get video by id
     const video = await Video.aggregate([
         {
             $match: {
@@ -160,6 +164,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
+
     const {title, description} = req.body;
     if(title == undefined || title.trim() == "") {
         throw new ApiError(400, "Send valid title");
@@ -177,7 +182,8 @@ const updateVideo = asyncHandler(async (req, res) => {
             new: true
         }
     )
-    if(!updateVideo) {
+
+    if(!updatedVideo) {
         throw new ApiError(400, "Send a valid videoId");
     }
     return res
@@ -189,13 +195,23 @@ const updateVideo = asyncHandler(async (req, res) => {
 })
 
 const deleteVideo = asyncHandler(async (req, res) => {
-    const { videoId } = req.params
-    //TODO: delete video
-    const deleteVideo = await Video.findByIdAndDelete(videoId);
-    if(!deleteVideo) {
+    const { videoId } = req.params;
+    const deletedVideo = await Video.findByIdAndDelete(videoId);
+    if(!deletedVideo) {
         throw new ApiError(400, "Send a valid videoId to delete video");
     }
-    console.log(deleteVideo);
+
+    const deleteThumbnail = await deleteImageOnCloudinary(deletedVideo.thumbnail.public_id);
+    const deleteVideoFile = await deleteVideoOnCloudinary(deletedVideo.videoFile.public_id);
+
+    if(!deleteThumbnail) {
+        throw new ApiError(500, "Internal Server error when delete thumbnail");
+    }
+    if(!deleteVideoFile) {
+        throw new ApiError(500, "Internal Server error when delete videoFile");
+    }
+    
+
     return res
     .status(200)
     .json(
@@ -214,7 +230,6 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
         
         }
     )
-    console.log(toggleVideo);
     return res
     .status(200)
     .json(

@@ -23,7 +23,6 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     }
   ])
 
-  console.log(deletLike);
 
   if (deletLike && deletLike.length < 1) {
     const like = await Like.create({
@@ -36,12 +35,11 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .json(new ApiResponse(200, like, "Video Like docs create successfully"));
-  } else {
+  } 
     await Like.findByIdAndDelete(deletLike[0]._id);
-  }
   return res
     .status(200)
-    .json(new ApiResponse(200, "Video Like delete successfully"));
+    .json(new ApiResponse(200, "Video Like deleted successfully"));
 });
 
 const toggleCommentLike = asyncHandler(async (req, res) => {
@@ -70,18 +68,17 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .json(new ApiResponse(200, like, "Comment Like docs create successfully"));
-  } else {
-    await Like.findByIdAndDelete(findLike[0]._id);
   }
+    await Like.findByIdAndDelete(findLike[0]._id);
   return res
     .status(200)
-    .json(new ApiResponse(200, "Comment Like docs delete successfully"));
+    .json(new ApiResponse(200, "Comment Like docs deleted successfully"));
 });
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
   const { tweetId } = req.params;
 
-  const tweet = await Tweet.findById(videoId);
+  const tweet = await Tweet.findById(tweetId);
   if (!tweet) {
     throw new ApiError(400, "Send a valid tweet id");
   }
@@ -94,6 +91,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     }
   ])
   if (findLike && findLike.length < 1) {
+
     const like = await Like.create({
       tweet: new mongoose.Types.ObjectId(tweetId),
       likedBy: new mongoose.Types.ObjectId(req.user?._id),
@@ -105,9 +103,10 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, like, "Tweet Like docs create successfully"));
   }
+  await Like.findByIdAndDelete(findLike[0]._id);
   return res
     .status(200)
-    .json(new ApiResponse(200, "Tweet Like toggle successfully"));
+    .json(new ApiResponse(200, "Tweet Like deleted successfully"));
 });
 
 const getLikedVideos = asyncHandler(async (req, res) => {

@@ -29,10 +29,16 @@ const userSchema = new Schema(
       required: [true, "Password is requried"],
     },
     avatar: {
-      type: String,
+      type: {
+        url: String,
+        public_id: String
+      }
     },
     coverImage: {
-      type: String,
+      type: {
+        url: String,
+        public_id: String
+      }
     },
     refreshToken: {
       type: String,

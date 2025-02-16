@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.models.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteImageOnCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
@@ -14,7 +14,8 @@ const generateAccessandRefreshToken = async(userId) => {
         await user.save({ ValidateBeforeSave: false });
         return {accessToken, refreshToken};        
     } catch (error) {
-        throw new ApiError(500, "Something went wrong on creating AccessToken and Refresh Token");
+      console.log(error.message);
+        throw new ApiError(500, "Something went wrong on creating AccessToken and Refresh Token", error.message);
     }
 }
 
@@ -54,8 +55,14 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     fullname,
     password,
-    avatar: avatarCloudinary.url,
-    coverImage: converImageCloudinary?.url || "",
+    avatar: {
+      url: avatarCloudinary.url,
+      public_id: avatarCloudinary.public_id
+    },
+    coverImage: {
+      url: converImageCloudinary?.url || "",
+      public_id: converImageCloudinary?.public_id || ""
+    },
   });
   // remove refreshToken and password from return data
   const createdUser = await User.findById(newUser._id).select(
@@ -208,7 +215,7 @@ const getCurrentUser = asyncHandler(async(req, res) => {
   )
 })
 
-// TODO: Account details update controller
+
 
 const updateUserAvatar = asyncHandler(async(req, res) => {
   const avatar = req.file?.path;
@@ -232,13 +239,23 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
   const updatedUser = await User.findByIdAndUpdate(user._id,
     {
       $set: {
-        avatar: newAvatar.url
+        avatar: {
+          url: newAvatar.url,
+          public_id: newAvatar.public_id
+        }
       }
     },
     {
       new: true
     }
   ).select("-password -refreshToken");
+
+  if(user.avatar.public_id != "") {
+    const deleteCoverImagefromCloudinary = await deleteImageOnCloudinary(user.avatar.public_id);
+    if(!deleteCoverImagefromCloudinary) {
+      throw new ApiError(500, "Something went wrong when delete avatar from cloudinary");
+    }
+  }
 
   return res
   .status(200)
@@ -268,7 +285,10 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
   const updatedUser = await User.findByIdAndUpdate(user._id,
     {
       $set: {
-        coverImage: newCoverImage.url
+        coverImage: {
+          url: newCoverImage.url,
+          public_id: newCoverImage.public_id
+        }
       }
     },
     {
@@ -276,6 +296,12 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
     }
   ).select("-password -refreshToken");
 
+  if(user.coverImage.public_id != "") {
+    const deleteCoverImagefromCloudinary = await deleteImageOnCloudinary(user.coverImage.public_id);
+    if(!deleteCoverImagefromCloudinary) {
+      throw new ApiError(500, "Something went wrong when delete coverimage from cloudinary");
+    }
+  }
   return res
   .status(200)
   .json(

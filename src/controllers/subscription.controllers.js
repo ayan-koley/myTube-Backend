@@ -22,16 +22,24 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     if(alreadySubscribed && alreadySubscribed.length > 0) {
         await Subscription.findByIdAndDelete(alreadySubscribed[0]._id)
     }   else {
-        await Subscription.create({
+        const isSubscribed = await Subscription.create({
             subscriber: new mongoose.Types.ObjectId(req.user?._id),
             channel: new mongoose.Types.ObjectId(channelId)
         })
+        if(!isSubscribed) {
+            throw new ApiError(500, "Something gone wrong when subscribe this channel")
+        }
+        return res
+        .status(200)
+        .json(
+        new ApiResponse(200, "Subscribe channel")
+    )
     }
 
     return res
     .status(200)
     .json(
-        new ApiResponse(200, "Togglesubscribe completed")
+        new ApiResponse(200, "Unsubscribe channel")
     )
 })
 
@@ -39,6 +47,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     const {channelId} = req.params
     // hwo much docs create based on channel on subscription model
+    console.log(channelId);
     const data = await Subscription.aggregate([
         {
             $match: {
@@ -52,13 +61,6 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
                 foreignField: "_id",
                 as: "owner",
                 pipeline: [
-                    // {
-                    //     $addFields: {
-                    //         owner: {
-                    //             $first: "$owner"
-                    //         }
-                    //     }
-                    // },
                     {
                         $project: {
                             fullname: 1,
@@ -70,7 +72,15 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
                     }
                 ]
             }
-        }
+        },
+        {
+            $addFields: {
+                owner: {
+                    $first: "$owner"
+                },
+                
+            }
+        },
     ])
     console.log(data);
     if(!data) {
@@ -101,13 +111,6 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
                 as: "channel",
                 pipeline: [
                     {
-                        $addFields: {
-                            channel: {
-                                $first: "$channel"
-                            }
-                        }
-                    },
-                    {
                         $project: {
                             fullname: 1,
                             username: 1,
@@ -118,9 +121,15 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
                     }
                 ]
             }
+        },
+        {
+            $addFields: {
+                channel: {
+                    $first: "$channel"
+                }
+            }
         }
     ])
-    console.log(data);
     if(!data) {
         console.log(400, "Send a valid subscriber id")
     }

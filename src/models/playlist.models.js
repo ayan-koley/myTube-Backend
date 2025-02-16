@@ -9,6 +9,18 @@ const  playlistSchema = new Schema({
         type: String,
         requried: true
     },
+    coverImage: {
+        type: {
+            url: {
+                type: String,
+                default: ""
+            },
+            public_id: {
+                type: String,
+                default: ""
+            }
+        }
+    },
     videos: [
         {
             type: Schema.Types.ObjectId,

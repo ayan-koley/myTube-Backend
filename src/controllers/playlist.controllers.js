@@ -67,6 +67,11 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
     if(!video) {
         throw new ApiError(400, "Send a valid video id");
     }
+    const playlist = await Playlist.findById(playlistId);
+    
+    if(!playlist) {
+        throw new ApiError(400, "Send a valid playlist id");
+    } 
     const addvideo = await Playlist.findByIdAndUpdate(
         playlistId,
         {
@@ -78,10 +83,18 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
             new: true
         }
     )
-    if(!addvideo) {
-        throw new ApiError(400, "Send a valid palylist id");
-    }
 
+    if(addvideo.videos?.length == 1) {
+        const video = await Video.findById(addvideo.videos?.[0]);
+        await Playlist.findByIdAndUpdate(
+            playlistId,{
+                coverImage: {
+                    url: video.thumbnail?.url
+                }
+            }
+        )
+    }
+    
     return res
     .status(200)
     .json(

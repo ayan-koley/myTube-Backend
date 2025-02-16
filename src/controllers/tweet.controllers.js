@@ -12,7 +12,7 @@ const createTweet = asyncHandler(async (req, res) => {
     }
     const newTweet = await Tweet.create(
         {
-            owner: new mongoose.Types.ObjectId(req.user?._id),
+            owner: req.user?._id,
             content
         }
     )
@@ -38,7 +38,6 @@ const getUserTweets = asyncHandler(async (req, res) => {
             }
         }
     ])
-    console.log(tweets);
     if(tweets && tweets.length < 1) {
         throw new ApiError(400, "Doesn't find any tweet");
     }

@@ -13,7 +13,6 @@ const uploadOnCloudinary = async(localFilePath) => {
         const response = await cloudinary.uploader.upload(localFilePath, {
             resource_type: 'auto'
         })
-        console.log("Response of clodinary after upload file ", response);
         fs.unlinkSync(localFilePath);
         return response;
     } catch (error) {
@@ -22,4 +21,31 @@ const uploadOnCloudinary = async(localFilePath) => {
     }
 }
 
-export {uploadOnCloudinary};
+const deleteImageOnCloudinary = async(public_id)=> {
+    try {
+        if(!public_id) return null;
+        const response = await cloudinary.uploader.destroy(public_id, {
+            resource_type: 'image'
+        })
+        console.log("Response of clodinary after delete file ", response);
+        return response;
+    } catch (error) {
+        console.log("error on delete file is ", error.message);
+        return null;
+    }
+}
+const deleteVideoOnCloudinary = async(public_id)=> {
+    try {
+        if(!public_id) return null;
+        const response = await cloudinary.uploader.destroy(public_id, {
+            resource_type: 'video'
+        })
+        console.log("Response of clodinary after delete file ", response);
+        return response;
+    } catch (error) {
+        console.log("error on delete file is ", error.message);
+        return null;
+    }
+}
+
+export {uploadOnCloudinary, deleteImageOnCloudinary, deleteVideoOnCloudinary};
