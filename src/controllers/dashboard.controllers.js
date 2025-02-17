@@ -36,7 +36,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
         {
             $lookup: {
                 from: "likes",
-                "let": {"videosId": "$allVideos"},
+                "let": {"videosId": "$allVideos._id"},
                 pipeline: [
                     {
                         $match: {
