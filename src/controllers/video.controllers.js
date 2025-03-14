@@ -27,7 +27,10 @@ const getAllVideos = asyncHandler(async (req, res) => {
   const videos = await Video.aggregate([
     {
       $match: {
-        title: { $regex: query, $options: "i" },
+        $or: [
+          { title: { $regex: query, $options: "i" } },
+          { description: { $regex: query, $options: "i" } },
+        ],
       },
     },
     {
