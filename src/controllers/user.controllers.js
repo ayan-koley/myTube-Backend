@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.models.js";
+import {Video} from '../models/video.models.js';
 import { deleteImageOnCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -37,7 +38,9 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   // checking avtar have or not
 
-  if (!req.files.avatar) {
+  console.log(req.files);
+
+  if (!req.files?.avatar) {
     throw new ApiError(400, "avatar is missing");
   }
   const avatarLocalFile = req.files?.avatar[0]?.path;
@@ -431,6 +434,26 @@ const getWatchHistory = asyncHandler(async(req, res) => {
   )
 })
 
+const addInWatchHistory = asyncHandler(async(req, res) => {
+  const {videoId} = req.params;
+  // i explicetly check that the video is exist on watch history or not
+  const isExist = await Video.findById(videoId);
+  if(!isExist) {
+    throw new ApiError(404, "Video is not exist on dbs");
+  }
+  const userData = req.user;
+  if(!userData) {
+    throw new ApiError(400, "Unauthorized request");
+  }
+  userData.watchHistory.push(videoId);
+  await userData.save({ValidateBeforeSave: false});
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, {}, "Video add in watchHistory")
+    )
+})
+
 export { 
   registerUser, 
   loginUser, 
@@ -441,5 +464,6 @@ export {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChannelProfile,
-  getWatchHistory
+  getWatchHistory,
+  addInWatchHistory
 };
