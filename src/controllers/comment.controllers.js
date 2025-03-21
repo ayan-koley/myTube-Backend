@@ -5,13 +5,36 @@ import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 
 const getVideoComments = asyncHandler(async (req, res) => {
-    //TODO: get all comments for a video
     const {videoId} = req.params
     const {page = 1, limit = 10} = req.query
     const comment = await Comment.aggregate([
         {
             $match: {
                 video: new mongoose.Types.ObjectId(videoId)
+            }
+        },
+        {
+            $lookup: {
+                from:"users",
+                localField:"owner",
+                foreignField: "_id",
+                as: "owner_details",
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            fullname: 1,
+                            avatar: 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $addFields: {
+                "owner_details": {
+                    $first: "$owner_details"
+                }
             }
         },
         {
@@ -25,7 +48,8 @@ const getVideoComments = asyncHandler(async (req, res) => {
                     }
                 ]
             }
-        }
+        },
+        
     ])
     console.log(comment)
     if(comment && comment.length < 1) {
