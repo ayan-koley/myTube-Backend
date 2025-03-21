@@ -445,6 +445,14 @@ const addInWatchHistory = asyncHandler(async(req, res) => {
   if(!userData) {
     throw new ApiError(400, "Unauthorized request");
   }
+  const existOnHistory = await User.exists({watchHistory: videoId, _id: req.user?._id});
+  if(existOnHistory) {
+    return res
+    .status(200)
+    .json(
+      new ApiResponse(200, "video exist on history")
+    )
+  }
   userData.watchHistory.push(videoId);
   await userData.save({ValidateBeforeSave: false});
   return res
