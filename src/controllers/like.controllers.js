@@ -34,12 +34,12 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     }
     return res
     .status(200)
-    .json(new ApiResponse(200, like, "Video Like docs create successfully"));
+    .json(new ApiResponse(200, "like create"));
   } 
     await Like.findByIdAndDelete(deletLike[0]._id);
   return res
     .status(200)
-    .json(new ApiResponse(200, "Video Like deleted successfully"));
+    .json(new ApiResponse(200, "like delete"));
 });
 
 const toggleCommentLike = asyncHandler(async (req, res) => {
@@ -142,4 +142,17 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     )
 });
 
-export { toggleCommentLike, toggleTweetLike, toggleVideoLike, getLikedVideos };
+const getLikeStatus = asyncHandler(async(req, res) => {
+  const {videoId} = req.params;
+  const isLiked = await Like.exists({video: videoId, likedBy: req.user?._id});
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, "liked fetched successfully", {
+      isLiked: !!isLiked
+    })
+  )
+})
+
+export { toggleCommentLike, toggleTweetLike, toggleVideoLike, getLikedVideos, getLikeStatus };
