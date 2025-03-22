@@ -14,32 +14,31 @@ const toggleSubscription = asyncHandler(async (req, res) => {
         {
             $match: {
                 channel: new mongoose.Types.ObjectId(channelId),
-                subscriber: new mongoose.Types.ObjectId(req.user?._id)
+                subscriber: req.user?._id
             }
         }
     ])
     
     if(alreadySubscribed && alreadySubscribed.length > 0) {
         await Subscription.findByIdAndDelete(alreadySubscribed[0]._id)
-    }   else {
-        const isSubscribed = await Subscription.create({
-            subscriber: new mongoose.Types.ObjectId(req.user?._id),
-            channel: new mongoose.Types.ObjectId(channelId)
-        })
-        if(!isSubscribed) {
-            throw new ApiError(500, "Something gone wrong when subscribe this channel")
-        }
         return res
         .status(200)
         .json(
-        new ApiResponse(200, "Subscribe channel")
-    )
+            new ApiResponse(200, "delete subscription")
+        )
     }
 
+    const isSubscribed = await Subscription.create({
+        subscriber: req.user?._id,
+        channel: new mongoose.Types.ObjectId(channelId)
+    })
+    if(!isSubscribed) {
+        throw new ApiError(500, "Something gone wrong when subscribe this channel")
+    }
     return res
     .status(200)
     .json(
-        new ApiResponse(200, "Unsubscribe channel")
+        new ApiResponse(200, "create subscription")
     )
 })
 
@@ -140,8 +139,19 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     )
 })
 
+const getSubscribedStatus = asyncHandler(async(req, res) => {
+    const {channelId} = req.params;
+    const isSubscribed = await Subscription.exists({subscriber: req.user?._id, channel: new mongoose.Types.ObjectId(channelId)});
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, "fetching subscribed details", {isSubscribed: !!isSubscribed})
+    ) 
+})
+
 export {
     toggleSubscription,
     getUserChannelSubscribers,
-    getSubscribedChannels
+    getSubscribedChannels,
+    getSubscribedStatus
 }

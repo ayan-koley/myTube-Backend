@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
     getSubscribedChannels,
+    getSubscribedStatus,
     getUserChannelSubscribers,
     toggleSubscription,
 } from "../controllers/subscription.controllers.js"
@@ -15,5 +16,6 @@ router
     .post(toggleSubscription);
 
 router.route("/subscribed-channel/:subscriberId").get(getSubscribedChannels);
+router.route("/status/:channelId").get(getSubscribedStatus)
 
 export default router
