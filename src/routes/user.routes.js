@@ -11,6 +11,8 @@ import {
   getUserChannelProfile,
   getWatchHistory,
   addInWatchHistory,
+  updateFullname,
+  getChannelVideo,
 } from "../controllers/user.controllers.js";
 import { upload } from "../middlewares/multer.middlewares.js";
 import { verifyJwt } from "../middlewares/auth.middlewares.js";
@@ -43,4 +45,6 @@ router
 router.route("/profile/:username").get(verifyJwt, getUserChannelProfile);
 router.route("/watch-history").get(verifyJwt, getWatchHistory);
 router.route("/watch-history/:videoId").patch(verifyJwt, addInWatchHistory);
+router.route("/new-name").patch(verifyJwt, updateFullname);
+router.route("/channel-videos/:userId").get(getChannelVideo);
 export default router;

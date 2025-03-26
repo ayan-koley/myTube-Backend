@@ -6,6 +6,7 @@ import {Video} from '../models/video.models.js';
 import { deleteImageOnCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { response } from "express";
 
 const generateAccessandRefreshToken = async(userId) => {
     try {
@@ -312,6 +313,32 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
   )
 })
 
+const updateFullname = asyncHandler(async(req, res) => {
+  const {fullname} = req.body;
+  if(!fullname || fullname.trim() === "") {
+    throw new ApiError(401, "Send a valid name");
+  }
+  const isUser = await User.findById(req.user?._id);
+  if(!isUser) {
+    throw new ApiError(400, "Send a valid userid");
+  }
+  const updateName = await User.findByIdAndUpdate(req.user?._id,
+    {
+      fullname
+    },
+    {
+      new: true
+    }
+  )
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, "Full name is change successfully", updateName)
+  )
+
+})
+
 const getUserChannelProfile = asyncHandler(async(req, res) => {
   const {username} = req.params;
   if(!username?.trim()) {
@@ -366,6 +393,14 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
         subscriberCount: 1,
         channelSubscribedCount: 1,
         isSubscribed: 1
+      }
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "_id",
+        foreignField: "owner",
+        as: "videos"
       }
     }
 ])
@@ -462,6 +497,34 @@ const addInWatchHistory = asyncHandler(async(req, res) => {
     )
 })
 
+const getChannelVideo = asyncHandler(async(req, res) => {
+  const {userId} = req.params;
+  const userData = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(userId)
+      }
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "_id",
+        foreignField: "owner",
+        as: "videos"
+      }
+    }
+  ])
+  console.log(userData);
+  if(!userData) {
+    throw new ApiError(400, "Invalid UserId on params");
+  }
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, "userdata with video fetched successfully", userData)
+  )
+})
+
 export { 
   registerUser, 
   loginUser, 
@@ -471,7 +534,9 @@ export {
   getCurrentUser,
   updateUserAvatar,
   updateUserCoverImage,
+  updateFullname,
   getUserChannelProfile,
   getWatchHistory,
-  addInWatchHistory
+  addInWatchHistory,
+  getChannelVideo,
 };
