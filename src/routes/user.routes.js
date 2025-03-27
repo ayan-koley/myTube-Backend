@@ -13,6 +13,7 @@ import {
   addInWatchHistory,
   updateFullname,
   getChannelVideo,
+  removeFromWatchHistory
 } from "../controllers/user.controllers.js";
 import { upload } from "../middlewares/multer.middlewares.js";
 import { verifyJwt } from "../middlewares/auth.middlewares.js";
@@ -42,9 +43,10 @@ router
 router
   .route("/change-coverimage")
   .patch(verifyJwt, upload.single("coverImage"), updateUserCoverImage);
-router.route("/profile/:username").get(verifyJwt, getUserChannelProfile);
+router.route("/profile/:username").get(getUserChannelProfile);
 router.route("/watch-history").get(verifyJwt, getWatchHistory);
 router.route("/watch-history/:videoId").patch(verifyJwt, addInWatchHistory);
 router.route("/new-name").patch(verifyJwt, updateFullname);
 router.route("/channel-videos/:userId").get(getChannelVideo);
+router.route("/watch-history/remove/:videoId").patch(verifyJwt, removeFromWatchHistory);
 export default router;
