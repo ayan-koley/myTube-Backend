@@ -8,7 +8,7 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 const createTweet = asyncHandler(async (req, res) => {
     const {content} = req.body;
     if(!content) {
-        throw new ApiError(400, "Send a valid content ");
+        throw new ApiError(406, "Invalid content.");
     }
     const newTweet = await Tweet.create(
         {
@@ -17,7 +17,7 @@ const createTweet = asyncHandler(async (req, res) => {
         }
     )
     if(!newTweet) {
-        throw new ApiError(400, "Unauthorized request");
+        throw new ApiError(401, "Unauthorized request");
     }
     return res
     .status(200)
@@ -28,9 +28,6 @@ const createTweet = asyncHandler(async (req, res) => {
 
 const getUserTweets = asyncHandler(async (req, res) => {
     const {userId} = req.params;
-    // if(!userId) {
-    //     throw new ApiError(401, "Unauthorized request");
-    // }
     const tweets = await Tweet.aggregate([
         {
             $match: {
@@ -39,7 +36,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
         }
     ])
     if(tweets && tweets.length < 1) {
-        throw new ApiError(400, "Doesn't find any tweet");
+        throw new ApiError(404, "Doesn't find any tweet");
     }
     return res
     .status(200)
@@ -54,7 +51,6 @@ const updateTweet = asyncHandler(async (req, res) => {
     if(!content.trim()) {
         throw new ApiError(400, "Send a valid content");
     }
-    // find and update tweet
     const updatedTweet = await Tweet.findByIdAndUpdate(tweetId,
         {
             content
@@ -82,7 +78,7 @@ const deleteTweet = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, "Tweet delete successfully")
+        new ApiResponse(200, {}, "Tweet delete successfully")
     )
 })
 

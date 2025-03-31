@@ -104,7 +104,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
     ])
 
     if(details && details.length < 1) {
-        throw new ApiError(500, "Unable to fetched dashboard details")
+        throw new ApiError(401, "Unauthorized request.")
     }
 
     return res
@@ -116,12 +116,11 @@ const getChannelStats = asyncHandler(async (req, res) => {
 })
 
 const getChannelVideos = asyncHandler(async (req, res) => {
-    // TODO: Get all the videos uploaded by the channel
     const videos = await Video.find({
         owner: req.user?._id
     });
     if(videos && videos.length < 1) {
-        throw new ApiError(400, "Unauthorized reques");
+        throw new ApiError(401, "Unauthorized reques");
     }
     return res
     .status(200)

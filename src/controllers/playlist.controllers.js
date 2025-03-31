@@ -8,11 +8,11 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 
 const createPlaylist = asyncHandler(async (req, res) => {
     const {name, description} = req.body
-    if(name == undefined || name.trim() == "") {
-        throw new ApiError(400, "Send a valid name of playlist");
+    if(!name || name.trim() == "") {
+        throw new ApiError(406, "Fullname is required.");
     }
-    if(description == undefined || description.trim() == "") {
-        throw new ApiError(400, "Send a valid description of playlist");
+    if(!description || description.trim() == "") {
+        throw new ApiError(406, "desciption is required.");
     }
 
     const newPlaylist = await Playlist.create({
@@ -22,7 +22,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
     })
 
     if(!newPlaylist) {
-        throw new ApiError(401, "Unauthorized requst")
+        throw new ApiError(401, "Unauthorized requst");
     }
     return res
     .status(200)
@@ -33,12 +33,14 @@ const createPlaylist = asyncHandler(async (req, res) => {
 
 const getUserPlaylists = asyncHandler(async (req, res) => {
     const {userId} = req.params
-    //TODO: get user playlists
+    if(!isValidObjectId(userId)) {
+        throw new ApiError(401, "Invalid userId");
+    }
     const playlists = await Playlist.find({
         owner: userId
     })
     if(!playlists) {
-        throw new ApiError(400, "playlist is not found")
+        throw new ApiError(404, "playlist is not found")
     }
     return res
     .status(200)
@@ -49,10 +51,12 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
 
 const getPlaylistById = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
-    
+    if(!isValidObjectId(playlistId)) {
+        throw new ApiError(404, "Invalid playlistId");
+    }
     const playlist = await Playlist.findById(playlistId);
     if(!playlist) {
-        throw new ApiError(400, "Invalid playlist id")
+        throw new ApiError(404, "Playlist not found.");
     }
     return res
     .status(200)
@@ -65,13 +69,23 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
     const {playlistId, videoId} = req.params
     const video = await Video.findById(videoId);
     if(!video) {
-        throw new ApiError(400, "Send a valid video id");
+        throw new ApiError(404, "Send a valid video id");
     }
     const playlist = await Playlist.findById(playlistId);
     
     if(!playlist) {
-        throw new ApiError(400, "Send a valid playlist id");
+        throw new ApiError(404, "Send a valid playlist id");
     } 
+    const status = playlist.video.includes(videoId);
+
+    if(status) {
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(200, {playlist}, "Video is already have in playlist")
+        )
+    }
+
     const addvideo = await Playlist.findByIdAndUpdate(
         playlistId,
         {
@@ -83,22 +97,11 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
             new: true
         }
     )
-
-    if(addvideo.videos?.length == 1) {
-        const video = await Video.findById(addvideo.videos?.[0]);
-        await Playlist.findByIdAndUpdate(
-            playlistId,{
-                coverImage: {
-                    url: video.thumbnail?.url
-                }
-            }
-        )
-    }
     
     return res
     .status(200)
     .json(
-        new ApiResponse(200, addvideo, "Video add  successfully")
+        new ApiResponse(200, {addvideo}, "Video added successfully")
     )
 })
 
@@ -134,8 +137,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
 })
 
 const deletePlaylist = asyncHandler(async (req, res) => {
-    const {playlistId} = req.params
-    // TODO: delete playlist
+    const {playlistId} = req.params;
     const deleteList = await Playlist.findByIdAndDelete(playlistId);
     if(!deleteList) {
         throw new ApiError(400, "Send a valid palylist id");
@@ -152,11 +154,11 @@ const updatePlaylist = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     const {name, description} = req.body
 
-    if(name == undefined || name.trim() == "" ) {
-        throw new ApiError(400, "Send a valid name of playlist");
+    if(!name || name.trim() == "" ) {
+        throw new ApiError(406, "Invalid playlist name");
     }
-    if(description == undefined || description.trim() == "" ) {
-        throw new ApiError(400, "Send a valid description of playlist");
+    if(!description || description.trim() == "" ) {
+        throw new ApiError(406, "Invalid description");
     }
     
     const updatedPlaylist = await Playlist.findByIdAndUpdate(playlistId,
@@ -180,6 +182,53 @@ const updatePlaylist = asyncHandler(async (req, res) => {
         new ApiResponse(200, updatedPlaylist, "playlist update successfully")
     )
 })
+const updateName = asyncHandler(async(req, res) => {
+    const {playlistId} = req.params;
+    const {name} = req.body;
+    if(!name || name.trim() == "") {
+        throw new ApiError(404, "Invalid name");
+    }
+    const updatedPlaylist = await Playlist.findByIdAndUpdate(playlistId,
+        {
+            name
+        },
+        {
+            new: true
+        }
+    )
+    if(!updatedPlaylist) {
+        throw new ApiError(404, "Invalid playlistId.")
+    }
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, updatePlaylist, "name update successfully")
+    )
+})
+
+const updateDesciption = asyncHandler(async(req, res) => {
+    const {playlistId} = req.params;
+    const {description} = req.body;
+    if(!description || description.trim() == "") {
+        throw new ApiError(404, "Invalid description");
+    }
+    const updatedPlaylist = await Playlist.findByIdAndUpdate(playlistId,
+        {
+            description
+        },
+        {
+            new: true
+        }
+    )
+    if(!updatedPlaylist) {
+        throw new ApiError(404, "Invalid playlistId.")
+    }
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, updatePlaylist, "description update successfully")
+    )
+})
 
 export {
     createPlaylist,
@@ -188,5 +237,7 @@ export {
     addVideoToPlaylist,
     removeVideoFromPlaylist,
     deletePlaylist,
-    updatePlaylist
+    updatePlaylist,
+    updateName,
+    updateDesciption
 }

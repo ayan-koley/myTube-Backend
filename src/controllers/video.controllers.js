@@ -199,7 +199,7 @@ const getVideoById = asyncHandler(async (req, res) => {
   if (video && video.length < 1) {
     throw new ApiError(400, "Send a valid videoId");
   }
-  return res.status(200).json(new ApiResponse(200, video));
+  return res.status(200).json(new ApiResponse(200, video, "vidoe fetched successfully"));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {

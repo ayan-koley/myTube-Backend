@@ -24,7 +24,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
         return res
         .status(200)
         .json(
-            new ApiResponse(200, "delete subscription")
+            new ApiResponse(200, {}, "delete subscription")
         )
     }
 
@@ -38,7 +38,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, "create subscription")
+        new ApiResponse(200, {}, "create subscription")
     )
 })
 
@@ -81,7 +81,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
         },
     ])
     if(!data) {
-        throw new ApiError(400, "Send a valid channel id")
+        throw new ApiError(404, "Send a valid channel id")
     }
     return res
     .status(200)
@@ -128,7 +128,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         }
     ])
     if(!data) {
-        throw new ApiError(400, "Send a valid subscriber id")
+        throw new ApiError(404, "Send a valid subscriber id")
     }
     return res
     .status(200)
@@ -143,7 +143,7 @@ const getSubscribedStatus = asyncHandler(async(req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, "fetching subscribed details", {isSubscribed: !!isSubscribed})
+        new ApiResponse(200, {isSubscribed: !!isSubscribed}, "fetching subscribed details")
     ) 
 })
 

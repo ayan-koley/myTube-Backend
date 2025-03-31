@@ -1,4 +1,4 @@
-import mongoose from "mongoose"
+import mongoose, { isValidObjectId } from "mongoose"
 import {Comment} from "../models/comment.models.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
@@ -52,22 +52,21 @@ const getVideoComments = asyncHandler(async (req, res) => {
         
     ])
     if(comment && comment.length < 1) {
-        throw new ApiError(400, "Doesn't find comment")
+        throw new ApiError(404, "Doesn't find comment")
     }
     return res
     .status(200)
     .json(
-        new ApiResponse(300, comment, "Comment fetched successfully")
+        new ApiResponse(200, comment, "Comment fetched successfully")
     )
 
 })
 
 const addComment = asyncHandler(async (req, res) => {
-    // TODO: add a comment to a video
     const {videoId} = req.params;
     const {content} = req.body;
-    if(content == undefined && content.trim() == "") {
-        throw new ApiError(400, "Content is missing")
+    if(!content || content.trim() === "") {
+        throw new ApiError(406, "Content is missing")
     }
     const newComment = await Comment.create({
         content,
@@ -75,7 +74,7 @@ const addComment = asyncHandler(async (req, res) => {
         owner: req.user?._id
     })
     if(!newComment) {
-        throw new ApiError(400, "unauthorized request")
+        throw new ApiError(401, "unauthorized request")
     }
     return res
     .status(200)
@@ -85,11 +84,13 @@ const addComment = asyncHandler(async (req, res) => {
 })
 
 const updateComment = asyncHandler(async (req, res) => {
-    // TODO: update a comment
     const {commentId} = req.params;
     const {content} = req.body;
-    if(content == undefined && content.trim() == "") {
-        throw new ApiError(400, "Content is missing")
+    if(!content || content.trim() == "") {
+        throw new ApiError(406, "Content is missing")
+    }
+    if(isValidObjectId(commentId)) {
+        throw new ApiError(404, "Invalid commentId.")
     }
     const updatedComment = await Comment.findByIdAndUpdate(commentId,
         {
@@ -100,7 +101,7 @@ const updateComment = asyncHandler(async (req, res) => {
         }
     )
     if(!updatedComment) {
-        throw new ApiError(400, "Send a valid comment id")
+        throw new ApiError(401, "Unauthorized request.")
     }
     return res
     .status(200)
@@ -108,11 +109,10 @@ const updateComment = asyncHandler(async (req, res) => {
 })
 
 const deleteComment = asyncHandler(async (req, res) => {
-    // TODO: delete a comment
     const {commentId} = req.params;
     const deletedComment = await Comment.findByIdAndDelete(commentId);
     if(deletedComment && deletedComment.length < 1) {
-        throw new ApiError(400, "Send a valid comment id")
+        throw new ApiError(404, "Send a valid comment id")
     }
     return res
     .status(200)
