@@ -19,7 +19,6 @@ const generateAccessandRefreshToken = async (userId) => {
     await user.save({ ValidateBeforeSave: false });
     return { accessToken, refreshToken };
   } catch (error) {
-    console.log(error.message);
     throw new ApiError(
       500,
       "Something went wrong on creating AccessToken and Refresh Token",
@@ -44,9 +43,6 @@ const registerUser = asyncHandler(async (req, res) => {
   if (existingUser) {
     throw new ApiError(409, "User is already exist on database");
   }
-  // checking avtar have or not
-
-  console.log(req.files);
 
   if (!req.files?.avatar) {
     throw new ApiError(400, "avatar is missing");
@@ -238,7 +234,6 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
   const avatar = req.file?.path;
-  console.log(req.file);
   if (!avatar) {
     throw new ApiError(400, "Avatar is missing ");
   }
@@ -428,7 +423,6 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     }
 ])
 
-  console.log("userDetails is ", userDetails);
   if (!userDetails?.length) {
     throw new ApiError(400, "channel doesn't exist");
   }
@@ -481,7 +475,6 @@ const getWatchHistory = asyncHandler(async (req, res) => {
       },
     },
   ]);
-  console.log(watchHistory);
   if (!watchHistory) {
     throw new ApiError(400, "Unauthorized request");
   }

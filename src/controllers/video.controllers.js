@@ -195,7 +195,6 @@ const getVideoById = asyncHandler(async (req, res) => {
       },
     },
   ]);
-  console.log("video is ", video);
 
   if (video && video.length < 1) {
     throw new ApiError(400, "Send a valid videoId");

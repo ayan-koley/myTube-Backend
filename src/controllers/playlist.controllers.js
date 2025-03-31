@@ -151,7 +151,6 @@ const deletePlaylist = asyncHandler(async (req, res) => {
 const updatePlaylist = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     const {name, description} = req.body
-    console.log(name, description)
 
     if(name == undefined || name.trim() == "" ) {
         throw new ApiError(400, "Send a valid name of playlist");

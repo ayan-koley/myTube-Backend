@@ -46,7 +46,6 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     const {channelId} = req.params
     // hwo much docs create based on channel on subscription model
-    console.log(channelId);
     const data = await Subscription.aggregate([
         {
             $match: {
@@ -81,9 +80,8 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
             }
         },
     ])
-    console.log(data);
     if(!data) {
-        console.log(400, "Send a valid channel id")
+        throw new ApiError(400, "Send a valid channel id")
     }
     return res
     .status(200)
@@ -130,7 +128,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         }
     ])
     if(!data) {
-        console.log(400, "Send a valid subscriber id")
+        throw new ApiError(400, "Send a valid subscriber id")
     }
     return res
     .status(200)

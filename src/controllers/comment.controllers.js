@@ -51,7 +51,6 @@ const getVideoComments = asyncHandler(async (req, res) => {
         },
         
     ])
-    console.log(comment)
     if(comment && comment.length < 1) {
         throw new ApiError(400, "Doesn't find comment")
     }
@@ -112,7 +111,6 @@ const deleteComment = asyncHandler(async (req, res) => {
     // TODO: delete a comment
     const {commentId} = req.params;
     const deletedComment = await Comment.findByIdAndDelete(commentId);
-    console.log(deletedComment);
     if(deletedComment && deletedComment.length < 1) {
         throw new ApiError(400, "Send a valid comment id")
     }

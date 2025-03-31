@@ -27,10 +27,8 @@ const deleteImageOnCloudinary = async(public_id)=> {
         const response = await cloudinary.uploader.destroy(public_id, {
             resource_type: 'image'
         })
-        console.log("Response of clodinary after delete file ", response);
         return response;
     } catch (error) {
-        console.log("error on delete file is ", error.message);
         return null;
     }
 }
@@ -40,10 +38,8 @@ const deleteVideoOnCloudinary = async(public_id)=> {
         const response = await cloudinary.uploader.destroy(public_id, {
             resource_type: 'video'
         })
-        console.log("Response of clodinary after delete file ", response);
         return response;
     } catch (error) {
-        console.log("error on delete file is ", error.message);
         return null;
     }
 }
