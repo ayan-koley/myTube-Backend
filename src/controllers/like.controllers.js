@@ -31,10 +31,10 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     if (!like) {
       throw new ApiError(401, "Unauthorized request");
     }
-    return res.status(200).json(new ApiResponse(200, "like create"));
+    return res.status(200).json(new ApiResponse(200,  {}, "like create"));
   }
   await Like.findByIdAndDelete(isLiked[0]._id);
-  return res.status(200).json(new ApiResponse(200, "like delete"));
+  return res.status(200).json(new ApiResponse(200, {}, "like delete"));
 });
 
 const toggleCommentLike = asyncHandler(async (req, res) => {
@@ -64,7 +64,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
       .json(new ApiResponse(200, like, "Comment Like create"));
   }
   await Like.findByIdAndDelete(findLike[0]._id);
-  return res.status(200).json(new ApiResponse(200, "Comment Like delete"));
+  return res.status(200).json(new ApiResponse(200, {}, "Comment Like delete"));
 });
 
 const toggleTweetLike = asyncHandler(async (req, res) => {

@@ -66,26 +66,20 @@ const getPlaylistById = asyncHandler(async (req, res) => {
 })
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
-    const {playlistId, videoId} = req.params
+    const {playlistId, videoId} = req.params;
     const video = await Video.findById(videoId);
     if(!video) {
         throw new ApiError(404, "Send a valid video id");
     }
     const playlist = await Playlist.findById(playlistId);
+    if(playlist.videos.includes(videoId)) {
+        throw new ApiError(400, "Video is already have on playlist");
+    }
     
     if(!playlist) {
         throw new ApiError(404, "Send a valid playlist id");
     } 
-    const status = playlist.video.includes(videoId);
-
-    if(status) {
-        return res
-        .status(200)
-        .json(
-            new ApiResponse(200, {playlist}, "Video is already have in playlist")
-        )
-    }
-
+    
     const addvideo = await Playlist.findByIdAndUpdate(
         playlistId,
         {
@@ -101,7 +95,7 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, {addvideo}, "Video added successfully")
+        new ApiResponse(200, addvideo, "Video added successfully")
     )
 })
 
@@ -230,6 +224,63 @@ const updateDesciption = asyncHandler(async(req, res) => {
     )
 })
 
+const playlistVideos = asyncHandler(async(req, res) => {
+    const { playlistId } = req.params;
+    if(!isValidObjectId(playlistId)) {
+        throw new ApiError(404, "Invalid playlistid");
+    }
+    const response = await Playlist.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(playlistId)
+            }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "videos",
+                foreignField: "_id",
+                as: "videos",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        fullname: 1,
+                                        username: 1,
+                                        avatar: 1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields: {
+                            "owner": {
+                                $first: "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+    if(!response) {
+        throw new ApiError(404, "Invalid playlistId");
+    }
+    console.log(response);
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, response, "Playlist video fetch successfully!")
+    )
+})
+
 export {
     createPlaylist,
     getUserPlaylists,
@@ -239,5 +290,6 @@ export {
     deletePlaylist,
     updatePlaylist,
     updateName,
-    updateDesciption
+    updateDesciption,
+    playlistVideos
 }
